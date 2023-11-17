@@ -13,6 +13,20 @@ mem->帮助记忆单词，给出词根、派生、词源
 
 本项目会将用户查询的所有单词储存在本地.csv文件中，再次查询时可以直接调用，减少api消耗
 
+请使用以下格式查询
+
+```shell
+instruct--task:subtask
+```
+
+例如：
+
+```shell
+exotic--vocab:mem
+```
+
+
+
 ## example/例子
 
 ![](image/example.png)
@@ -80,5 +94,9 @@ trenchant--exp
 trenchant--mem
 ```
 
+## to-do
 
+* 支持学术知识问答
+  * 支持学术名词解释
+  * 向量索引
 
