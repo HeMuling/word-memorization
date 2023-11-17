@@ -89,9 +89,9 @@ python3 VocabGPT.py
 例如
 
 ```python
-trenchant # 当任务名称缺失时默认为exp
-trenchant--exp
-trenchant--mem
+trenchant--vocab # 当任务名称缺失时默认为exp
+trenchant--vocab:exp
+trenchant--vocab:mem
 ```
 
 ## to-do
