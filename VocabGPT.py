@@ -204,7 +204,7 @@ def cache_output(instruction:str, output:str, cache_loc:str,
     path = os.path.join(cache_loc, task_name + '.csv') # cache file name: task_name.csv
     
     # read cache file
-    cache = pd.read_csv(path)
+    cache = pd.read_csv(path, index_col=0)
     # input data
     cache.loc[instruction, subtask_name] = output
     # store to .csv
