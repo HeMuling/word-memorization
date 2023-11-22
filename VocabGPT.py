@@ -158,6 +158,15 @@ def get_prompt_dict(input_dict:dict=None)->str:
                     3. **词源**： \"exotic\" 来自希腊语 \"exotikos\"，这进一步源自 \"exo\"（外面）。这个词首先是形容词 \"exo\" 的派生，意为 \"来自远方
                     的\" 或 \"非本地的\"，延伸出我们今天所理解的 \"具有异国特色\" 或 \"外来稀奇\" 的含义。\n
                 ''',
+                'logic':'''
+                    对于我所给的单词，你需要直接给出这个单词的含义，如果有多个含义则需要都给出，然后从逻辑上说明，多个含义是如何衍生出来的。答案以中文给出。\n
+                    范例：\n
+                    "Blithe" 这个词主要有两个含义：\n
+                    1. 快乐的，无忧无虑的：指一个人非常快乐、心无烦恼，生活得很无忧无虑。例如，在一场欢乐的派对上，一个人可能会显得特别blithe。\n
+                    2. 轻率的，不在乎的：指一个人表现得对别人或者情况没有太多关心，或者态度上显得漫不经心。例如，一个人对于重要决定的做出可能会被认为是blithe的，如果他没有认真考虑后果。\n
+                    这两个含义之间是有一定逻辑联系的。如果一个人是无忧无虑的，不被生活的压力和困难所困扰，这种态度有时可能会导致他在某些情况下显得漫不经心或者轻率，因为他可能没有感受到需要更加谨慎或严肃对待的压力。
+                    反之，一个态度轻率的人可能因为对事情不太上心，而显得过于无忧无虑，以至于忽视了一些重要的细节或对别人的感受。\n
+                ''',
             },
         }
     else:
@@ -174,6 +183,7 @@ def init_csv(task_name:str, cache_loc:str, prompt_dict:dict)->None:
 
     this function will create a csv file a given each task
     colomn will be: 'task name', 'subtask1', 'subtask2', ...
+    this happens when tried to retrive
     '''
 
     path = os.path.join(cache_loc, task_name + '.csv') # cache file name: task_name.csv
@@ -183,7 +193,39 @@ def init_csv(task_name:str, cache_loc:str, prompt_dict:dict)->None:
     for subtask in prompt_dict[task_name]:
         if subtask not in cache.columns and subtask != 'universal':
             cache[subtask] = ''
-    cache.to_csv(path, index=False)
+    cache.to_csv(path, index=True)
+
+def examine_csv(task_name:str, cache_loc:str, prompt_dict:dict)->None:
+    '''
+    args:
+        - task_name: str, task name
+        - cache_loc: str, cache location, should be a folder
+        - prompt_dict: dict, set by users
+
+    this function will examine if csv file contains all needed subtaskes
+    used if new subtask is added
+    this happens when tried to cache output
+    '''
+    path = os.path.join(cache_loc, task_name + '.csv') # cache file name: task_name.csv
+
+    # get colomn name in csv
+    cache = pd.read_csv(path, index_col=0)
+    column_name = cache.columns
+    
+    # get subtask name in prompt_dict
+    subtask_name = [subname for subname in prompt_dict[task_name].keys() if subname != 'universal']
+
+    # check and get missing subtask
+    missing_subtask = [subname for subname in subtask_name if subname not in column_name]
+
+    # add missing subtask to csv
+    if len(missing_subtask) > 0:
+        for subtask in missing_subtask:
+            cache[subtask] = ''
+        cache.to_csv(path, index=True)
+    else:
+        pass
+    
 
 def cache_output(instruction:str, output:str, cache_loc:str, 
                  task_name:str, subtask_name:str, 
@@ -202,7 +244,9 @@ def cache_output(instruction:str, output:str, cache_loc:str,
     '''
 
     path = os.path.join(cache_loc, task_name + '.csv') # cache file name: task_name.csv
-    
+
+    # examine if csv file contains all needed subtaskes
+    examine_csv(task_name, cache_loc, prompt_dict)
     # read cache file
     cache = pd.read_csv(path, index_col=0)
     # input data
@@ -235,7 +279,9 @@ def retrive(instruction:str,
         init_csv(task_name, cache_loc, prompt_dict)
     cache = pd.read_csv(path, index_col=0)
     if instruction in cache.index:
+        # get output from cache
         output = cache.loc[instruction, subtask_name]
+        # check if output has value, if value is nan, return None
         if str(output) != 'nan':
             return output
         else:
